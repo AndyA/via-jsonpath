@@ -14,6 +14,9 @@ def _nop(obj: Any) -> Any:
     return obj
 
 
+RESET = _nop, _nop, _nop, _nop
+
+
 def _c_is_not_ours(obj: Any) -> Any:
     if id(obj) in _owned:
         raise JPError(f"Already owned object {obj} ({id(obj)})")
@@ -36,7 +39,6 @@ def _c_adopt(obj: Any) -> Any:
 
 
 CAUTION = _c_adopt, _c_claim, _c_is_ours, _c_is_not_ours
-RESET = _nop, _nop, _nop, _nop
 
 _adopt, _claim, _is_ours, _is_not_ours = RESET
 _owned: Optional[set] = None
