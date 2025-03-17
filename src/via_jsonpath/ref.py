@@ -15,6 +15,8 @@ def _nop(obj: Any) -> Any:
 
 
 RESET = _nop, _nop, _nop, _nop
+_adopt, _claim, _is_ours, _is_not_ours = RESET
+_owned: Optional[set] = None
 
 
 def _c_is_not_ours(obj: Any) -> Any:
@@ -39,9 +41,6 @@ def _c_adopt(obj: Any) -> Any:
 
 
 CAUTION = _c_adopt, _c_claim, _c_is_ours, _c_is_not_ours
-
-_adopt, _claim, _is_ours, _is_not_ours = RESET
-_owned: Optional[set] = None
 
 
 @contextmanager
