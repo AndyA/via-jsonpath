@@ -24,7 +24,7 @@ class Node:
         if self.leaf:
             yield path, obj, self
 
-        if isinstance(obj, dict) or isinstance(obj, list):
+        if isinstance(obj, (list, dict)):
             for key, node in self.next.items():
                 if key == JPSearch:
                     yield from node.search(obj, path)
