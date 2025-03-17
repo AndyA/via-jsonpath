@@ -8,7 +8,7 @@ NodeWalk = Generator[tuple[JP, Any, Self], None, None]
 
 def is_in(obj: Any, key: Any) -> bool:
     if isinstance(obj, dict):
-        return key in obj
+        return isinstance(key, str) and key in obj
 
     if isinstance(obj, list):
         return isinstance(key, int) and 0 <= key < len(obj)
