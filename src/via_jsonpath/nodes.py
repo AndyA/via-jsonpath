@@ -13,7 +13,7 @@ class Node:
     data: Any = None
     leaf: bool = False
 
-    def search(self, obj: Any, path) -> NodeWalk:
+    def search(self, obj: Any, path=JPRoot) -> NodeWalk:
         yield from self.visit(obj, path)
         for idx, value in kv_of(obj):
             yield from self.search(value, path + (idx,))
