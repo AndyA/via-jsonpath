@@ -35,19 +35,11 @@ def _c_adopt(obj: Any) -> Any:
     return _c_claim(_c_is_not_ours(obj))
 
 
-_adopt = _nop
-_claim = _nop
-_is_ours = _nop
-_is_not_ours = _nop
-_owned: Optional[set] = None
-
-CAUTION = (
-    _c_adopt,
-    _c_claim,
-    _c_is_ours,
-    _c_is_not_ours,
-)
+CAUTION = _c_adopt, _c_claim, _c_is_ours, _c_is_not_ours
 RESET = _nop, _nop, _nop, _nop
+
+_adopt, _claim, _is_ours, _is_not_ours = RESET
+_owned: Optional[set] = None
 
 
 @contextmanager
