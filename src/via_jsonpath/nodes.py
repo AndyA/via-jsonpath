@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
-from functools import cached_property
-from typing import Any, Generator
+from typing import Any, Generator, Iterable
 
 from typing_extensions import Self
 
