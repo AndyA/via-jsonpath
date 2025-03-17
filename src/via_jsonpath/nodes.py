@@ -1,8 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Any, Generator, Self
 
-from via_jsonpath.ref import Deleted
-
 from .jp import JP, JPField, JPRoot, JPSearch, JPWild
 from .sugar import is_in, kv_of
 
@@ -12,7 +10,7 @@ NodeWalk = Generator[tuple[JP, Any, Self], None, None]
 @dataclass(frozen=True, kw_only=True)
 class Node:
     next: dict[JPField, Self] = field(default_factory=dict)
-    data: Any = Deleted
+    data: Any = None
     leaf: bool = False
 
     def search(self, obj: Any, path) -> NodeWalk:
