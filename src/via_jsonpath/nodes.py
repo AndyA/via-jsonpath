@@ -47,4 +47,3 @@ class InnerNode:
 class LeafNode(InnerNode):
     data: Any
     leaf = True
-    leaf = True
