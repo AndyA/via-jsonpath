@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from itertools import groupby
-from typing import Any, Self
+from typing import Any
+
+from typing_extensions import Self
 
 from .jp import JP, JPError, JPField
 from .ref import (

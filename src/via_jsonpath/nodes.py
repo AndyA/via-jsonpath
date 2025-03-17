@@ -1,5 +1,8 @@
 from dataclasses import dataclass, field
-from typing import Any, Generator, Iterable, Self
+from functools import cached_property
+from typing import Any, Generator
+
+from typing_extensions import Self
 
 from .jp import JP, JPField, JPRoot, JPSearch, JPWild
 

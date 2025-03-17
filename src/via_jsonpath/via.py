@@ -1,7 +1,9 @@
 from dataclasses import dataclass, field
 from functools import cached_property
 from itertools import count
-from typing import Any, Callable, Optional, Self
+from typing import Any, Callable, Optional
+
+from typing_extensions import Self
 
 from .editor import Editor
 from .jp import JP
