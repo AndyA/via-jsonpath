@@ -24,6 +24,8 @@ class TestIndexFountain:
         assert fountain.allocate(JP("$.foo")) == 0
         assert fountain.allocate(JP("$.foo.boz")) == 0
 
+        fountain.reset(JP("$.boz"))  # NOP, no error
+
 
 @dataclass(frozen=True, kw_only=True)
 class EditorCase:
