@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 from copy import copy
-from typing import Any, Optional
+from dataclasses import dataclass, field
+from typing import Any
 
 from .jp import JPError
 from .symbol import Symbol
@@ -10,70 +11,71 @@ Ignored = Symbol("Ignored")
 Ref = tuple[dict, str] | tuple[list, int]
 
 
-def _nop(obj: Any) -> Any:
-    return obj
+class NopArena:
+    def _nop(self, obj: Any) -> Any:
+        return obj
+
+    claim = _nop
+    adopt = _nop
+    is_not_ours = _nop
+    is_ours = _nop
 
 
-RESET = _nop, _nop, _nop, _nop
-_adopt, _claim, _is_ours, _is_not_ours = RESET
-_owned: Optional[set] = None
+@dataclass
+class CheckedArena(NopArena):
+    owned: set[int] = field(default_factory=set)  # noqa: F821
+
+    def claim(self, obj: Any) -> Any:
+        self.owned.add(id(obj))
+        return obj
+
+    def adopt(self, obj: Any) -> Any:
+        return self.claim(self.is_not_ours(obj))
+
+    def is_not_ours(self, obj: Any) -> Any:
+        if id(obj) in self.owned:
+            raise JPError(f"Already owned object {obj} ({id(obj)})")
+        return obj
+
+    def is_ours(self, obj: Any) -> Any:
+        if id(obj) not in self.owned:
+            raise JPError(f"Foreign object {obj} ({id(obj)})")
+        return obj
 
 
-def _c_is_not_ours(obj: Any) -> Any:
-    if id(obj) in _owned:
-        raise JPError(f"Already owned object {obj} ({id(obj)})")
-    return obj
-
-
-def _c_is_ours(obj: Any) -> Any:
-    if id(obj) not in _owned:
-        raise JPError(f"Foreign object {obj} ({id(obj)})")
-    return obj
-
-
-def _c_claim(obj: Any) -> Any:
-    _owned.add(id(obj))
-    return obj
-
-
-def _c_adopt(obj: Any) -> Any:
-    return _c_claim(_c_is_not_ours(obj))
-
-
-CAUTION = _c_adopt, _c_claim, _c_is_ours, _c_is_not_ours
+arena = NopArena()
 
 
 @contextmanager
 def caution():
-    global _adopt, _claim, _is_ours, _is_not_ours, _owned
+    global arena
     # Already cautious?
-    if _owned is not None:
-        yield _owned
+    if isinstance(arena, CheckedArena):
+        yield arena.owned
         return
 
+    saved = arena
     try:
-        _adopt, _claim, _is_ours, _is_not_ours = CAUTION
-        _owned = set()
-        yield _owned
+        arena = CheckedArena()
+        yield arena.owned
     finally:
-        _adopt, _claim, _is_ours, _is_not_ours = RESET
-        _owned = None
+        arena = saved
 
 
 def adopt(obj: Any) -> Any:
-    return _adopt(obj)
+    return arena.adopt(obj)
 
 
 def claim(obj: Any) -> Any:
-    return _claim(obj)
+    return arena.claim(obj)
 
 
 def is_ours(obj: Any) -> Any:
-    return _is_ours(obj)
+    return arena.is_ours(obj)
 
 
 def is_not_ours(obj: Any) -> Any:
-    return _is_not_ours(obj)
+    return arena.is_not_ours(obj)
 
 
 def is_dict_ref(ref: Ref) -> bool:
@@ -97,7 +99,7 @@ def peek(ref: Ref) -> Any:
 
 def trim_tail(ref: Ref) -> Ref:
     if is_list_ref(ref):
-        obj = _is_ours(ref[0])
+        obj = arena.is_ours(ref[0])
         while obj and obj[-1] == Deleted:
             obj.pop()
 
@@ -106,7 +108,7 @@ def poke(ref: Ref, value: Any) -> None:
     if value == Ignored:
         return
 
-    obj, key = _is_ours(ref[0]), ref[1]
+    obj, key = arena.is_ours(ref[0]), ref[1]
 
     if is_dict_ref(ref):
         if value == Deleted:
@@ -124,14 +126,14 @@ def poke(ref: Ref, value: Any) -> None:
 
 
 def copy_in(obj: Any) -> Any:
-    return _adopt(copy(obj))
+    return arena.adopt(copy(obj))
 
 
 def ensure(ref: Ref, next_type: type) -> Ref:
     next_ref = peek(ref)
 
     if next_ref == Deleted:
-        next_ref = _adopt(next_type())
+        next_ref = arena.adopt(next_type())
     else:
         if not isinstance(next_ref, next_type):
             raise JPError(
