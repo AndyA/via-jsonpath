@@ -1,4 +1,4 @@
-from via_jsonpath import JP, InnerNode, LeafNode, Trie
+from via_jsonpath import JP, LeafNode, Node, Trie
 
 
 class TestTrie:
@@ -25,16 +25,16 @@ class TestTrie:
 
     def test_trie(self):
         t = Trie()
-        assert t.trie == InnerNode(next={})
+        assert t.trie == Node(next={})
         assert t.trie is t.trie
 
         t["$.foo.bar"] = 1
         t["$.foo.baz"] = 2
         t["$.foo[0]"] = 3
 
-        assert t.trie == InnerNode(
+        assert t.trie == Node(
             next={
-                "foo": InnerNode(
+                "foo": Node(
                     next={
                         "bar": LeafNode(data=1),
                         "baz": LeafNode(data=2),
@@ -46,4 +46,4 @@ class TestTrie:
         assert t.trie is t.trie
 
         t.clear()
-        assert t.trie == InnerNode()
+        assert t.trie == Node()

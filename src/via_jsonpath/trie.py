@@ -2,7 +2,7 @@ from functools import cached_property
 from itertools import groupby
 
 from .jp import JP, JPField
-from .nodes import InnerNode, LeafNode
+from .nodes import LeafNode, Node
 
 
 class Trie(dict):
@@ -12,7 +12,7 @@ class Trie(dict):
         except AttributeError:
             pass
 
-    def __setitem__(self, key: JP | str, value: InnerNode) -> None:
+    def __setitem__(self, key: JP | str, value: Node) -> None:
         super().__setitem__(JP(key), value)
         self._invalidate()
 
@@ -24,35 +24,35 @@ class Trie(dict):
         super().clear()
         self._invalidate()
 
-    def setdefault(self, key: JP | str, default: InnerNode) -> InnerNode:
+    def setdefault(self, key: JP | str, default: Node) -> Node:
         key = JP(key)
         sentinel = object()
         if (value := self.get(key, sentinel)) is sentinel:
             self[key] = value = default
         return value
 
-    def __getitem__(self, key: JP | str) -> InnerNode:
+    def __getitem__(self, key: JP | str) -> Node:
         return super().__getitem__(JP(key))
 
     def __contains__(self, key: JP | str) -> bool:
         return super().__contains__(JP(key))
 
     @cached_property
-    def trie(self) -> InnerNode:
-        def make_next(items: list[tuple]) -> dict[JPField, InnerNode]:
+    def trie(self) -> Node:
+        def make_next(items: list[tuple]) -> dict[JPField, Node]:
             return {
                 k: make_trie([item[1:] for item in g])
                 for k, g in groupby(items, key=lambda p: p[0])
             }
 
-        def make_trie(items: list[tuple]) -> InnerNode:
+        def make_trie(items: list[tuple]) -> Node:
             if len(items[0]) == 1:  # Leaf?
                 return LeafNode(next=make_next(items[1:]), data=items[0][0])
             else:
-                return InnerNode(next=make_next(items))
+                return Node(next=make_next(items))
 
         if items := [(*k, v) for k, v in sorted(self.items())]:
             return make_trie(items)
 
         # Fake root for empty Trie
-        return InnerNode()
+        return Node()

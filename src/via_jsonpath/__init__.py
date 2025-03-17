@@ -1,4 +1,4 @@
-from .jp import JP, JPField, JPTuple, JPWild, JPSearch, JPError
-from .trie import Trie, InnerNode, LeafNode
 from .editor import Editor
-from .via import Via, ViaContext, Rule
+from .jp import JP, JPError, JPField, JPSearch, JPTuple, JPWild
+from .trie import LeafNode, Node, Trie
+from .via import Rule, Via, ViaContext

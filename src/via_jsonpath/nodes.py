@@ -9,7 +9,7 @@ NodeWalk = Generator[tuple[JP, Any, Self], None, None]
 
 
 @dataclass(frozen=True, kw_only=True)
-class InnerNode:
+class Node:
     next: dict[JPField, Self] = field(default_factory=dict)
     leaf = False
 
@@ -41,6 +41,6 @@ class InnerNode:
 
 
 @dataclass(frozen=True, kw_only=True)
-class LeafNode(InnerNode):
+class LeafNode(Node):
     data: Any
     leaf = True
