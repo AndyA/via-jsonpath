@@ -18,16 +18,13 @@ class InnerNode:
 
         return sorted(self.next.items(), key=key_fun)
 
-    def search(
-        self, obj: Any, *, path=JPRoot
-    ) -> Generator[tuple[JP, Self, Any], None, None]:
-        yield from self.visit(obj, path=path)
+    def search(self, obj: Any, path) -> Generator[tuple[JP, Self, Any], None, None]:
+        yield from self.visit(obj, path)
         for idx, value in kv_of(obj):
-            next_path = path + (idx,)
-            yield from self.search(value, path=next_path)
+            yield from self.search(value, path + (idx,))
 
     def visit(
-        self, obj: Any, *, path=JPRoot
+        self, obj: Any, path=JPRoot
     ) -> Generator[tuple[JP, Self, Any], None, None]:
         if self.leaf:
             yield path, obj, self
@@ -35,12 +32,12 @@ class InnerNode:
         if isinstance(obj, dict) or isinstance(obj, list):
             for key, node in self.items:
                 if key == JPSearch:
-                    yield from node.search(obj, path=path)
+                    yield from node.search(obj, path)
                 elif key == JPWild:
                     for idx, value in kv_of(obj):
-                        yield from node.visit(value, path=path + (idx,))
+                        yield from node.visit(value, path + (idx,))
                 elif is_in(obj, key):
-                    yield from node.visit(obj[key], path=path + (key,))
+                    yield from node.visit(obj[key], path + (key,))
 
 
 @dataclass(frozen=True, kw_only=True)
