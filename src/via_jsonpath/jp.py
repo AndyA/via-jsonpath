@@ -4,7 +4,7 @@ from functools import cached_property, total_ordering
 from itertools import takewhile
 from typing import Any, Generator, Sequence
 
-from .sugar import Symbol
+from .symbol import Symbol
 
 JPWild = Symbol("JPWild")
 JPSearch = Symbol("JPSearch")

@@ -123,7 +123,10 @@ class TestVia:
                 },
             ),
             ViaCase(
-                via=Via(Rule(src="$..tags[*]", dst="$[*]")),
+                via=Via(
+                    Rule(src="$..tags[*]", dst="$[*]"),
+                    Rule(src="$.not.there"),
+                ),
                 obj=obj1,
                 want=["a", "b", "c", "d", "e", "f"],
             ),

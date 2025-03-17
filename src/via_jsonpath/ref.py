@@ -3,7 +3,7 @@ from copy import copy
 from typing import Any, Optional
 
 from .jp import JPError
-from .sugar import Symbol
+from .symbol import Symbol
 
 Deleted = Symbol("Deleted")
 Ignored = Symbol("Ignored")

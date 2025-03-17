@@ -6,11 +6,14 @@ from typing import Any, Callable, Optional, Self
 from .editor import Editor
 from .jp import JP
 from .ref import Deleted, peek
-from .sugar import cast_array
 from .trie import Trie
 
 Path = JP | str
 MapFunction = Callable[[Any], Any]
+
+
+def cast_array(value: Any) -> list:
+    return value if isinstance(value, list) else [value]
 
 
 @dataclass(kw_only=True, frozen=True)
