@@ -1,4 +1,4 @@
-from via_jsonpath import JP, LeafNode, Node, Trie
+from via_jsonpath import JP, Node, Trie
 
 
 class TestTrie:
@@ -36,9 +36,9 @@ class TestTrie:
             next={
                 "foo": Node(
                     next={
-                        "bar": LeafNode(data=1),
-                        "baz": LeafNode(data=2),
-                        0: LeafNode(data=3),
+                        "bar": Node(data=1, leaf=True),
+                        "baz": Node(data=2, leaf=True),
+                        0: Node(data=3, leaf=True),
                     }
                 )
             }

@@ -2,7 +2,7 @@ from functools import cached_property
 from itertools import groupby
 
 from .jp import JP, JPField
-from .nodes import LeafNode, Node
+from .nodes import Node
 
 
 class Trie(dict):
@@ -47,7 +47,7 @@ class Trie(dict):
 
         def make_trie(items: list[tuple]) -> Node:
             if len(items[0]) == 1:  # Leaf?
-                return LeafNode(next=make_next(items[1:]), data=items[0][0])
+                return Node(next=make_next(items[1:]), data=items[0][0], leaf=True)
             else:
                 return Node(next=make_next(items))
 
