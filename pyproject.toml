@@ -1,0 +1,25 @@
+[project]
+name = "via-jsonpath"
+version = "0.1.0"
+description = "JSONPath based data mutation"
+readme = "README.md"
+authors = [
+    { name = "Andy Armstrong", email = "andy@hexten.net" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "pytest>=8.3.4",
+]
+
+[project.scripts]
+via-jsonpath = "via_jsonpath:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest-cov>=6.0.0",
+    "pytest-watcher>=0.4.3",
+]
