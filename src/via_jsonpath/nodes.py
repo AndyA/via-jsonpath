@@ -5,6 +5,8 @@ from typing import Any, Generator, Self
 from .jp import JP, JPField, JPRoot, JPSearch, JPWild
 from .sugar import is_in, kv_of
 
+NodeWalk = Generator[tuple[JP, Any, Self], None, None]
+
 
 @dataclass(frozen=True, kw_only=True)
 class InnerNode:
@@ -18,14 +20,12 @@ class InnerNode:
 
         return sorted(self.next.items(), key=key_fun)
 
-    def search(self, obj: Any, path) -> Generator[tuple[JP, Self, Any], None, None]:
+    def search(self, obj: Any, path) -> NodeWalk:
         yield from self.visit(obj, path)
         for idx, value in kv_of(obj):
             yield from self.search(value, path + (idx,))
 
-    def visit(
-        self, obj: Any, path=JPRoot
-    ) -> Generator[tuple[JP, Self, Any], None, None]:
+    def visit(self, obj: Any, path=JPRoot) -> NodeWalk:
         if self.leaf:
             yield path, obj, self
 
