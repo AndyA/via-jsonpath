@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from via_jsonpath import Trie
+from via_jsonpath import JPDict
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -11,7 +11,7 @@ class VisitCase:
     obj: Any
 
     def run_visit(self) -> list:
-        t = Trie()
+        t = JPDict()
         for path in self.paths:
             t.setdefault(path, []).append(path)
         return [

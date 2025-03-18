@@ -1,9 +1,9 @@
-from via_jsonpath import JP, Node, Trie
+from via_jsonpath import JP, JPDict, TrieNode
 
 
-class TestTrie:
+class TestJPDict:
     def test_simple(self):
-        t = Trie()
+        t = JPDict()
 
         t["$.foo"] = 1
         t["$.bar"] = 2
@@ -24,21 +24,21 @@ class TestTrie:
         assert dict(t) == {}
 
     def test_trie(self):
-        t = Trie()
-        assert t.trie == Node(next={})
+        t = JPDict()
+        assert t.trie == TrieNode(next={})
         assert t.trie is t.trie
 
         t["$.foo.bar"] = 1
         t["$.foo.baz"] = 2
         t["$.foo[0]"] = 3
 
-        assert t.trie == Node(
+        assert t.trie == TrieNode(
             next={
-                "foo": Node(
+                "foo": TrieNode(
                     next={
-                        "bar": Node(data=1, leaf=True),
-                        "baz": Node(data=2, leaf=True),
-                        0: Node(data=3, leaf=True),
+                        "bar": TrieNode(data=1, leaf=True),
+                        "baz": TrieNode(data=2, leaf=True),
+                        0: TrieNode(data=3, leaf=True),
                     }
                 )
             }
@@ -46,4 +46,4 @@ class TestTrie:
         assert t.trie is t.trie
 
         t.clear()
-        assert t.trie == Node()
+        assert t.trie == TrieNode()

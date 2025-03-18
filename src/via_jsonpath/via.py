@@ -7,8 +7,8 @@ from typing_extensions import Self
 
 from .editor import Editor
 from .jp import JP
+from .jp_dict import JPDict
 from .ref import Deleted, peek
-from .trie import Trie
 
 Path = JP | str
 MapFunction = Callable[[Any], Any]
@@ -77,9 +77,9 @@ class Via:
         return f"{type(self).__name__}({rules})"
 
     @cached_property
-    def _searcher(self) -> Trie[list[SrcRule]]:
+    def _searcher(self) -> JPDict[list[SrcRule]]:
         seq = count()
-        searcher = Trie[list[self.SrcRule]]()
+        searcher = JPDict[list[self.SrcRule]]()
         for rule in self.rules:
             for src in [JP(s) for s in cast_array(rule.src)]:
                 dsts = (

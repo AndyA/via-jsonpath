@@ -5,10 +5,9 @@ from typing import Any
 
 import pytest
 
+from via_jsonpath import JP, Deleted, Ignored, JPError
 from via_jsonpath.arena import caution
 from via_jsonpath.editor import Editor, IndexFountain
-from via_jsonpath.jp import JP, JPError
-from via_jsonpath.ref import Deleted, Ignored
 
 
 class TestIndexFountain:

@@ -5,7 +5,7 @@ from typing_extensions import Self
 
 from .jp import JP, JPField, JPRoot, JPSearch, JPWild
 
-NodeGenerator = Generator[tuple[JP, Any, Self], None, None]
+MatchGenerator = Generator[tuple[JP, Any, Self], None, None]
 
 
 def is_in(obj: Any, key: Any) -> bool:
@@ -29,17 +29,17 @@ def kv_of(obj: Any) -> Iterable[tuple[Any, Any]]:
 
 
 @dataclass(frozen=True, kw_only=True)
-class Node:
+class TrieNode:
     next: dict[JPField, Self] = field(default_factory=dict)
     data: Any = None
     leaf: bool = False
 
-    def search(self, obj: Any, path=JPRoot) -> NodeGenerator:
+    def search(self, obj: Any, path=JPRoot) -> MatchGenerator:
         yield from self.visit(obj, path)
         for idx, value in kv_of(obj):
             yield from self.search(value, path + (idx,))
 
-    def visit(self, obj: Any, path=JPRoot) -> NodeGenerator:
+    def visit(self, obj: Any, path=JPRoot) -> MatchGenerator:
         if self.leaf:
             yield path, obj, self
 

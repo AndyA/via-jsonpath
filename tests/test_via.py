@@ -5,10 +5,8 @@ from typing import Any
 
 import pytest
 
+from via_jsonpath import JP, Deleted, Rule, Via, ViaContext
 from via_jsonpath.arena import caution
-from via_jsonpath.jp import JP
-from via_jsonpath.ref import Deleted
-from via_jsonpath.via import Rule, Via, ViaContext
 
 
 @dataclass(kw_only=True, frozen=True)
