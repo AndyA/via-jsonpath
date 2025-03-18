@@ -5,7 +5,7 @@ from typing_extensions import Self
 
 from .jp import JP, JPField, JPRoot, JPSearch, JPWild
 
-NodeWalk = Generator[tuple[JP, Any, Self], None, None]
+NodeGenerator = Generator[tuple[JP, Any, Self], None, None]
 
 
 def is_in(obj: Any, key: Any) -> bool:
@@ -34,12 +34,12 @@ class Node:
     data: Any = None
     leaf: bool = False
 
-    def search(self, obj: Any, path=JPRoot) -> NodeWalk:
+    def search(self, obj: Any, path=JPRoot) -> NodeGenerator:
         yield from self.visit(obj, path)
         for idx, value in kv_of(obj):
             yield from self.search(value, path + (idx,))
 
-    def visit(self, obj: Any, path=JPRoot) -> NodeWalk:
+    def visit(self, obj: Any, path=JPRoot) -> NodeGenerator:
         if self.leaf:
             yield path, obj, self
 

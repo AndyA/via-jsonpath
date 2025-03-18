@@ -4,18 +4,9 @@ from typing import Any
 
 from typing_extensions import Self
 
+from .arena import claim
 from .jp import JP, JPError, JPField
-from .ref import (
-    Deleted,
-    Ignored,
-    Ref,
-    claim,
-    container_type,
-    ensure,
-    peek,
-    poke,
-    trim_tail,
-)
+from .ref import Deleted, Ignored, Ref, container_type, ensure, peek, poke, trim_tail
 
 ValueAtom = tuple[Any, int]
 ValueSlot = ValueAtom | list[ValueAtom]

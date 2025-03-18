@@ -1,81 +1,13 @@
-from contextlib import contextmanager
 from copy import copy
-from dataclasses import dataclass, field
 from typing import Any
 
+from .arena import adopt, is_ours
 from .jp import JPError
 from .symbol import Symbol
 
 Deleted = Symbol("Deleted")
 Ignored = Symbol("Ignored")
 Ref = tuple[dict, str] | tuple[list, int]
-
-
-class NopArena:
-    def _nop(self, obj: Any) -> Any:
-        return obj
-
-    claim = _nop
-    adopt = _nop
-    is_not_ours = _nop
-    is_ours = _nop
-
-
-@dataclass
-class CheckedArena(NopArena):
-    owned: set[int] = field(default_factory=set)
-
-    def claim(self, obj: Any) -> Any:
-        self.owned.add(id(obj))
-        return obj
-
-    def adopt(self, obj: Any) -> Any:
-        return self.claim(self.is_not_ours(obj))
-
-    def is_not_ours(self, obj: Any) -> Any:
-        if id(obj) in self.owned:
-            raise JPError(f"Already owned object {obj} ({id(obj)})")
-        return obj
-
-    def is_ours(self, obj: Any) -> Any:
-        if id(obj) not in self.owned:
-            raise JPError(f"Foreign object {obj} ({id(obj)})")
-        return obj
-
-
-arena = NopArena()
-
-
-@contextmanager
-def caution():
-    global arena
-    # Already cautious?
-    if isinstance(arena, CheckedArena):
-        yield arena.owned
-        return
-
-    saved = arena
-    try:
-        arena = CheckedArena()
-        yield arena.owned
-    finally:
-        arena = saved
-
-
-def adopt(obj: Any) -> Any:
-    return arena.adopt(obj)
-
-
-def claim(obj: Any) -> Any:
-    return arena.claim(obj)
-
-
-def is_ours(obj: Any) -> Any:
-    return arena.is_ours(obj)
-
-
-def is_not_ours(obj: Any) -> Any:
-    return arena.is_not_ours(obj)
 
 
 def is_dict_ref(ref: Ref) -> bool:
@@ -99,7 +31,7 @@ def peek(ref: Ref) -> Any:
 
 def trim_tail(ref: Ref) -> Ref:
     if is_list_ref(ref):
-        obj = arena.is_ours(ref[0])
+        obj = is_ours(ref[0])
         while obj and obj[-1] == Deleted:
             obj.pop()
 
@@ -108,7 +40,7 @@ def poke(ref: Ref, value: Any) -> None:
     if value == Ignored:
         return
 
-    obj, key = arena.is_ours(ref[0]), ref[1]
+    obj, key = is_ours(ref[0]), ref[1]
 
     if is_dict_ref(ref):
         if value == Deleted:
@@ -126,14 +58,14 @@ def poke(ref: Ref, value: Any) -> None:
 
 
 def copy_in(obj: Any) -> Any:
-    return arena.adopt(copy(obj))
+    return adopt(copy(obj))
 
 
 def ensure(ref: Ref, next_type: type) -> Ref:
     next_ref = peek(ref)
 
     if next_ref == Deleted:
-        next_ref = arena.adopt(next_type())
+        next_ref = adopt(next_type())
     else:
         if not isinstance(next_ref, next_type):
             raise JPError(
