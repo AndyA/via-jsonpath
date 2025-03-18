@@ -23,7 +23,7 @@ class NopArena:
 
 @dataclass
 class CheckedArena(NopArena):
-    owned: set[int] = field(default_factory=set)  # noqa: F821
+    owned: set[int] = field(default_factory=set)
 
     def claim(self, obj: Any) -> Any:
         self.owned.add(id(obj))
