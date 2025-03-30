@@ -23,7 +23,7 @@ from functools import cached_property
 import pycouchdb
 import requests
 
-from via_jsonpath.via import Rule, Via
+from via_jsonpath import Rule, Via
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -40,34 +40,38 @@ class CouchDB:
             return self.server.database(self.db_name)
 
 
-def run_deno(js: str):
-    deno = shutil.which("deno")
-    if not deno:
-        raise RuntimeError("Deno not found.")
-    with tempfile.NamedTemporaryFile(suffix=".js") as f:
-        f.write(js.encode())
-        f.flush()
-        result = subprocess.run([deno, "run", f.name], capture_output=True, text=True)
-        if result.returncode != 0:
-            raise RuntimeError(f"Deno script failed: {result.stderr}")
-        return result.stdout
+@dataclass(kw_only=True, frozen=True)
+class Deno:
+    @cached_property
+    def deno(self):
+        deno = shutil.which("deno")
+        if not deno:
+            raise RuntimeError("Deno not found.")
+        return deno
+
+    def run_script(self, js: str):
+        with tempfile.NamedTemporaryFile(suffix=".js") as f:
+            f.write(js.encode())
+            f.flush()
+            result = subprocess.run(
+                [self.deno, "run", f.name], capture_output=True, text=True
+            )
+            if result.returncode != 0:
+                raise RuntimeError(f"Deno script failed: {result.stderr}")
+            return result.stdout
 
 
-# $ curl https://beesolver.com/2025-03-25/answers -o answers.html
-def get_bee(date: str):
-    url = f"https://beesolver.com/{date}/answers"
-    res = requests.get(url).text.splitlines()
-    data = [line for line in res if re.match(r"\s*const\s+data\s+=\s+", line)]
-    if not data:
-        raise RuntimeError("No data found")
-    script = "\n".join(
-        [
-            data[0],
-            "console.log(JSON.stringify(data));",
-        ]
-    )
-    res = run_deno(script)
-    return json.loads(res)
+@dataclass(kw_only=True, frozen=True)
+class BeeSolver(Deno):
+    def get_bee(self, date: str):
+        url = f"https://beesolver.com/{date}/answers"
+        res = requests.get(url).text.splitlines()
+        data = [line for line in res if re.match(r"\s*const\s+data\s+=\s+", line)]
+        if not data:
+            raise RuntimeError("No data found")
+        script = "\n".join([data[0], "console.log(JSON.stringify(data));"])
+        res = self.run_script(script)
+        return json.loads(res)
 
 
 day = date.today()
@@ -77,6 +81,8 @@ con = CouchDB(
     server=pycouchdb.Server("http://chaise:sofa@lego:5984/"),
     db_name="bee",
 )
+
+bee = BeeSolver()
 
 via = Via(Rule(src="$[*].data", dst="$"))
 
@@ -90,7 +96,7 @@ while True:
         break
     except pycouchdb.exceptions.NotFound:
         pass
-    stash = get_bee(day.isoformat())
+    stash = bee.get_bee(day.isoformat())
     cooked = via.transform(stash)
     print(f"Saving {day}")
     doc = {"_id": day.isoformat(), **cooked}

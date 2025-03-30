@@ -142,11 +142,11 @@ class JP(JPTuple):
 
     @cached_property
     def bind_slots(self) -> tuple[int, ...]:
-        return tuple(i for i, f in enumerate(self) if is_wildcard(f))
+        return tuple(i for i, f in enumerate(self) if f == JPWild)
 
     @cached_property
     def is_concrete(self) -> bool:
-        return not self.bind_slots
+        return not any(is_wildcard(f) for f in self)
 
     def bind(self, indexes: Sequence[JPField | JPTuple]) -> "JP":
         slots = self.bind_slots
