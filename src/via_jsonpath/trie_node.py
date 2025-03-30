@@ -1,31 +1,13 @@
 from dataclasses import dataclass, field
-from typing import Any, Generator, Iterable
+from typing import Any, Generator
 
 from typing_extensions import Self
+
+from via_jsonpath.tools import is_in, kv_of
 
 from .jp import JP, JPField, JPRoot, JPSearch, JPWild
 
 MatchGenerator = Generator[tuple[JP, Any, Self], None, None]
-
-
-def is_in(obj: Any, key: Any) -> bool:
-    if isinstance(obj, dict) and isinstance(key, str) and key in obj:
-        return True
-
-    if isinstance(obj, list) and isinstance(key, int) and 0 <= key < len(obj):
-        return True
-
-    return False
-
-
-def kv_of(obj: Any) -> Iterable[tuple[Any, Any]]:
-    if isinstance(obj, dict):
-        return obj.items()
-
-    if isinstance(obj, list):
-        return enumerate(obj)
-
-    return []
 
 
 @dataclass(frozen=True, kw_only=True)
