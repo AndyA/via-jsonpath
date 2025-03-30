@@ -24,12 +24,19 @@ def kv_of(obj: Any) -> Iterable[tuple[Any, Any]]:
 
 
 def scan(
-    obj: Any, *, inner: bool = False, path: JP = JPRoot
+    obj: Any,
+    *,
+    inner: bool = False,
+    empty: bool = False,
+    path: JP = JPRoot,
 ) -> Iterable[tuple[Any, JP]]:
-    if isinstance(obj, (list, dict)):
-        if inner:
+    def scanner(obj, path):
+        if isinstance(obj, (list, dict)):
+            if inner or (empty and not obj):
+                yield obj, path
+            for idx, value in kv_of(obj):
+                yield from scanner(value, path + (idx,))
+        else:
             yield obj, path
-        for idx, value in kv_of(obj):
-            yield from scan(value, path=path + (idx,))
-    else:
-        yield obj, path
+
+    return scanner(obj, path)
