@@ -7,12 +7,12 @@ import pytest
 
 from via_jsonpath import JP, Deleted, Ignored, JPError
 from via_jsonpath.arena import caution
-from via_jsonpath.editor import Editor, IndexFountain
+from via_jsonpath.editor import Editor, IndexKeeper
 
 
 class TestIndexFountain:
     def test_allocate(self):
-        fountain = IndexFountain()
+        fountain = IndexKeeper()
         assert fountain.allocate(JP("$.foo")) == 0
         assert fountain.allocate(JP("$.foo")) == 1
         assert fountain.allocate(JP("$.bar")) == 0

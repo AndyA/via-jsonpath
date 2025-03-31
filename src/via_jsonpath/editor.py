@@ -13,14 +13,14 @@ ValueSlot = ValueAtom | list[ValueAtom]
 
 
 @dataclass
-class IndexFountain:
+class IndexKeeper:
     index: int = -1
     tree: dict[JPField, Self] = field(default_factory=dict)
 
     def allocate(self, path: JP) -> int:
         node = self
         for part in path:
-            node = node.tree.setdefault(part, IndexFountain())
+            node = node.tree.setdefault(part, IndexKeeper())
         node.index += 1
         return node.index
 
@@ -35,7 +35,7 @@ class IndexFountain:
 @dataclass
 class Editor:
     edits: dict[JP, ValueSlot] = field(default_factory=dict)
-    _fountain: IndexFountain = field(default_factory=IndexFountain)
+    _keeper: IndexKeeper = field(default_factory=IndexKeeper)
     _sequence: int = 1
 
     def set(self, key: JP | str, value: Any) -> None:
@@ -46,10 +46,10 @@ class Editor:
         if slots := key.bind_slots:
             if len(slots) > 1:
                 raise JPError("Bad wildcard. Only one [*] is allowed")
-            key = key.bind([self._fountain.allocate(key[: slots[0] + 1])])
+            key = key.bind([self._keeper.allocate(key[: slots[0] + 1])])
 
         self.edits[key] = (value, self._sequence)
-        self._fountain.reset(key)
+        self._keeper.reset(key)
         self._sequence += 1
 
     def edit(self, obj: Any = Deleted) -> Any:
