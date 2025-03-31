@@ -36,12 +36,8 @@ def trim_tail(ref: Ref) -> Ref:
             obj.pop()
 
 
-def poke(ref: Ref, value: Any) -> None:
-    if value == Ignored:
-        return
-
-    obj, key = is_ours(ref[0]), ref[1]
-
+def assign(ref: Ref, value: Any) -> None:
+    obj, key = ref
     if is_dict_ref(ref):
         if value == Deleted:
             obj.pop(key, None)
@@ -55,6 +51,12 @@ def poke(ref: Ref, value: Any) -> None:
         obj[key] = value
     else:
         raise JPError(f"Cannot set {key} in {type(obj).__name__}")
+
+
+def poke(ref: Ref, value: Any) -> None:
+    if value != Ignored:
+        is_ours(ref[0])
+        assign(ref, value)
 
 
 def copy_in(obj: Any) -> Any:
