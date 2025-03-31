@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from via_jsonpath import JP, Deleted, Rule, Via, ViaContext
+from via_jsonpath import JP, Deleted, Rule, Via, ViaContext, lit
 from via_jsonpath.arena import caution
 
 
@@ -128,6 +128,21 @@ class TestVia:
                 ),
                 obj=obj1,
                 want=["a", "b", "c", "d", "e", "f"],
+            ),
+            ViaCase(
+                via=Via(Rule(via=lit(str), dst="$")),
+                obj=obj1,
+                want=str,
+            ),
+            ViaCase(
+                via=Via(Rule(via=True, dst="$")),
+                obj={},
+                want=True,
+            ),
+            ViaCase(
+                via=Via(Rule(via=True, dst="$")),
+                obj=Deleted,
+                want=Deleted,
             ),
         ]
 

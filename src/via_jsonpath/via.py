@@ -8,7 +8,7 @@ from typing_extensions import Self
 from .editor import Editor
 from .jp import JP
 from .jp_dict import JPDict
-from .ref import Deleted, peek
+from .ref import Deleted, Ignored, peek
 
 Path = JP | str
 MapFunction = Callable[[Any], Any]
@@ -45,6 +45,11 @@ DstFunction = Callable[[ViaContext], Path]
 DstPath = Path | DstFunction
 
 
+def lit(value: Any) -> ViaFunction:
+    """Literal value for via."""
+    return lambda _: value
+
+
 @dataclass(kw_only=True, frozen=True)
 class Rule:
     src: Path | list[Path] = JP("$")
@@ -53,19 +58,18 @@ class Rule:
     map: MapFunction | list[MapFunction] = field(default_factory=list)
 
 
-class Via:
+@dataclass(kw_only=True, frozen=True)
+class SrcRule:
+    src: JP
+    dsts: Optional[DstPath | list[DstPath]]
+    vias: list[ViaFunction]
+    maps: list[MapFunction]
+    seq: int
+
+
+@dataclass(kw_only=True, frozen=True)
+class RuleSet:
     rules: list[Rule]
-
-    @dataclass(kw_only=True, frozen=True)
-    class SrcRule:
-        src: JP
-        dsts: Optional[DstPath | list[DstPath]]
-        vias: list[ViaFunction]
-        maps: list[MapFunction]
-        seq: int
-
-    def __init__(self, *rules: Rule):
-        self.rules = rules
 
     def __add__(self, other: Any) -> Self:
         if not isinstance(other, type(self)):
@@ -77,9 +81,9 @@ class Via:
         return f"{type(self).__name__}({rules})"
 
     @cached_property
-    def _searcher(self) -> JPDict[list[SrcRule]]:
+    def searcher(self) -> JPDict[list[SrcRule]]:
         seq = count()
-        searcher = JPDict[list[self.SrcRule]]()
+        searcher = JPDict[list[SrcRule]]()
         for rule in self.rules:
             for src in [JP(s) for s in cast_array(rule.src)]:
                 dsts = (
@@ -89,7 +93,7 @@ class Via:
                 )
 
                 searcher.setdefault(src, []).append(
-                    self.SrcRule(
+                    SrcRule(
                         src=src,
                         dsts=dsts,
                         vias=cast_array(rule.via),
@@ -100,13 +104,24 @@ class Via:
 
         return searcher.trie
 
-    def _search(self, ctx: ViaContext) -> list[tuple[SrcRule, JP, Any]]:
-        res = self._searcher.visit(ctx.data, path=JP("$"))
-        return [(rule, path, data) for path, data, node in res for rule in node.data]
 
-    def _build_editor(
-        self, ctx: ViaContext, hits: list[tuple[SrcRule, JP, Any]]
-    ) -> None:
+SearchHits = list[tuple[SrcRule, JP, Any]]
+
+
+class Via(RuleSet):
+    def __init__(self, *rules: Rule):
+        super().__init__(rules=rules)
+
+    def _search(self, ctx: ViaContext) -> SearchHits:
+        res = self.searcher.visit(ctx.data, path=JP("$"))
+        return [
+            (rule, path, data)
+            for path, data, node in res
+            for rule in node.data
+            if data not in (Deleted, Ignored)
+        ]
+
+    def _build_editor(self, ctx: ViaContext, hits: SearchHits) -> None:
         editor = Editor()
         for rule, path, data in hits:
             next_ctx = ViaContext(path=path, data=data, up=ctx)
@@ -125,7 +140,7 @@ class Via:
                 continue
 
             for dst in rule.dsts:
-                while callable(dst):
+                if callable(dst):
                     dst = dst(next_ctx)
                 editor.set(dst, data)
 
@@ -141,5 +156,4 @@ class Via:
 
     @classmethod
     def chain(cls, *vias: tuple[Self]) -> Self:
-        # TODO this is cute but it messes with ctx.root.
         return cls(Rule(via=list(vias)))
