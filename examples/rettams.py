@@ -15,7 +15,7 @@ from functools import cached_property
 from itertools import groupby
 from typing import Iterable, Optional
 
-from via_jsonpath import JP, Deleted, Editor
+from via_jsonpath import JP, Editor
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -52,13 +52,12 @@ class Smat:
     def load(cls, path: str) -> Iterable["Smat"]:
         with open(path) as f:
             for ln in f:
-                yield Smat(**json.loads(ln))
+                yield cls(**json.loads(ln))
 
 
 for key, smats in groupby(Smat.load("tmp/smat.json"), lambda x: x.key):
-    print(f"# key: {key}")
     editor = Editor()
     for smat in smats:
         editor.set(smat.path, smat.value)
-    obj = editor.edit(Deleted)
+    obj = editor.edit()
     print(json.dumps(obj, indent=2))
