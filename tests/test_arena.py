@@ -1,7 +1,7 @@
 import pytest
 
-from via_jsonpath import JPError
 from via_jsonpath.arena import adopt, caution, claim, is_not_ours, is_ours
+from via_jsonpath.jp import JPError
 from via_jsonpath.ref import copy_in, peek, poke, vivify
 
 

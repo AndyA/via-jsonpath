@@ -2,8 +2,6 @@ from dataclasses import dataclass, field
 from itertools import groupby
 from typing import Any
 
-from typing_extensions import Self
-
 from .arena import claim
 from .jp import JP, JPError, JPField
 from .ref import Deleted, Ignored, Ref, container_type, ensure, peek, poke, trim_tail
@@ -15,7 +13,7 @@ ValueSlot = ValueAtom | list[ValueAtom]
 @dataclass
 class IndexKeeper:
     index: int = -1
-    tree: dict[JPField, Self] = field(default_factory=dict)
+    tree: dict[JPField, "IndexKeeper"] = field(default_factory=dict)
 
     def allocate(self, path: JP) -> int:
         node = self

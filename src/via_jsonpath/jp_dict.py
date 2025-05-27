@@ -5,7 +5,7 @@ from .jp import JP, JPField
 from .trie_node import TrieNode
 
 
-class JPDict(dict):
+class JPDict(dict[JP, TrieNode]):
     def _invalidate(self) -> None:
         try:
             del self.trie
