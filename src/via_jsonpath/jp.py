@@ -37,7 +37,7 @@ class JP(JPTuple):
         return tuple.__new__(cls, path)
 
     @cached_property
-    def _key(self) -> tuple:
+    def _key(self) -> tuple[tuple[str, JPField], ...]:
         return tuple((type(f).__name__, f) for f in self)
 
     def __lt__(self, other: Any) -> bool:
@@ -55,7 +55,7 @@ class JP(JPTuple):
                 raise JPError("Unexpected end of path")
             return tok
 
-        def expect_tok(want):
+        def expect_tok(want: str):
             if (tok := need_tok()) != want:
                 raise JPError(f"Expected {want}, got {tok}")
             return tok
@@ -108,9 +108,10 @@ class JP(JPTuple):
                 parts.append("[*]")
             elif isinstance(field, int):
                 parts.append(f"[{field}]")
-            elif re.match(self.JP_KEY, field):
+            elif isinstance(field, str) and self.JP_KEY.match(field):
                 if parts[-1] != "..":
                     parts.append(".")
+                assert isinstance(field, str)
                 parts.append(field)
             else:
                 parts.append(f"[{json.dumps(field)}]")

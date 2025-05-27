@@ -7,7 +7,7 @@ from .symbol import Symbol
 
 Deleted = Symbol("Deleted")
 Ignored = Symbol("Ignored")
-Ref = tuple[dict, str] | tuple[list, int]
+Ref = tuple[dict[str, Any], str] | tuple[list[Any], int]
 
 
 def is_dict_ref(ref: Ref) -> bool:
@@ -21,15 +21,19 @@ def is_list_ref(ref: Ref) -> bool:
 def peek(ref: Ref) -> Any:
     obj, key = ref
     if is_dict_ref(ref):
+        assert isinstance(key, str)
+        assert isinstance(obj, dict)
         return obj.get(key, Deleted)
 
     if is_list_ref(ref):
+        assert isinstance(key, int)
+        assert isinstance(obj, list)
         return obj[key] if 0 <= key < len(obj) else Deleted
 
     raise JPError(f"Cannot get {key} from {type(obj).__name__}")
 
 
-def trim_tail(ref: Ref) -> Ref:
+def trim_tail(ref: Ref) -> None:
     if is_list_ref(ref):
         obj = is_ours(ref[0])
         while obj and obj[-1] == Deleted:
@@ -39,11 +43,15 @@ def trim_tail(ref: Ref) -> Ref:
 def assign(ref: Ref, value: Any) -> None:
     obj, key = ref
     if is_dict_ref(ref):
+        assert isinstance(key, str)
+        assert isinstance(obj, dict)
         if value == Deleted:
             obj.pop(key, None)
         else:
             obj[key] = value
     elif is_list_ref(ref):
+        assert isinstance(key, int)
+        assert isinstance(obj, list)
         assert key >= 0
         if value == Deleted and key >= len(obj):
             return
@@ -63,7 +71,7 @@ def copy_in(obj: Any) -> Any:
     return adopt(copy(obj))
 
 
-def ensure(ref: Ref, next_type: type) -> Ref:
+def ensure(ref: Ref, next_type: type) -> dict[str, Any] | list[Any]:
     next_ref = peek(ref)
 
     if next_ref == Deleted:
@@ -85,6 +93,12 @@ def container_type(key: Any) -> type:
     return dict if isinstance(key, str) else list
 
 
-def vivify(ref: Ref, key: Any) -> Ref:
+def vivify(ref: Ref, key: str | int) -> Ref:
     next_ref = ensure(ref, container_type(key))
-    return (next_ref, key)
+    # Keep pylance happy
+    if isinstance(next_ref, dict):
+        assert isinstance(key, str)
+        return (next_ref, key)
+    else:
+        assert isinstance(key, int)
+        return (next_ref, key)
