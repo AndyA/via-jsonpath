@@ -62,10 +62,29 @@ class Deno:
 
 
 @dataclass(kw_only=True, frozen=True)
+class Curl:
+    @cached_property
+    def curl(self):
+        curl = shutil.which("curl")
+        if not curl:
+            raise RuntimeError("curl not found.")
+        return curl
+
+    def fetch(self, url: str):
+        result = subprocess.run([self.curl, "-s", url], capture_output=True, text=True)
+        if result.returncode != 0:
+            raise RuntimeError(f"curl failed: {result.stderr}")
+        return result.stdout
+
+
+@dataclass(kw_only=True, frozen=True)
 class BeeSolver(Deno):
+    curl: Curl
+
     def get_bee(self, date: str):
         url = f"https://beesolver.com/{date}/answers"
-        res = requests.get(url).text.splitlines()
+        #         res = requests.get(url).text.splitlines()
+        res = self.curl.fetch(url).splitlines()
         data = [line for line in res if re.match(r"\s*const\s+data\s+=\s+", line)]
         if not data:
             raise RuntimeError("No data found")
@@ -82,7 +101,7 @@ con = CouchDB(
     db_name="bee",
 )
 
-bee = BeeSolver()
+bee = BeeSolver(curl=Curl())
 
 via = Via(Rule(src="$[*].data", dst="$"))
 
